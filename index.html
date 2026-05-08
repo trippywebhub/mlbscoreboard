@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MLB Scoreboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+    body {
+        background: #111;
+        color: #eee;
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+    }
+    h1 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #fff;
+    }
+    .game {
+        background: #1c1c1c;
+        padding: 15px;
+        margin-bottom: 12px;
+        border-radius: 8px;
+        border: 1px solid #333;
+    }
+    .teams {
+        display: flex;
+        justify-content: space-between;
+        font-size: 18px;
+        margin-bottom: 8px;
+    }
+    .status {
+        font-size: 14px;
+        color: #bbb;
+    }
+</style>
+</head>
+<body>
+
+<h1>MLB Scoreboard</h1>
+<div id="scoreboard">Loading scores...</div>
+
+<script>
+async function loadScores() {
+    try {
+        const res = await fetch("https://site.api.espn.com/apis/v2/sports/baseball/mlb/scoreboard");
+        const data = await res.json();
+        const games = data.events;
+
+        let html = "";
+
+        games.forEach(game => {
+            const c = game.competitions[0];
+            const home = c.competitors.find(t => t.homeAway === "home");
+            const away = c.competitors.find(t => t.homeAway === "away");
+
+            html += `
+                <div class="game">
+                    <div class="teams">
+                        <span>${away.team.displayName}: <strong>${away.score || "-"}</strong></span>
+                        <span>${home.team.displayName}: <strong>${home.score || "-"}</strong></span>
+                    </div>
+                    <div class="status">${c.status.type.shortDetail}</div>
+                </div>
+            `;
+        });
+
+        document.getElementById("scoreboard").innerHTML = html;
+    } catch (e) {
+        document.getElementById("scoreboard").innerHTML = "Error loading scores.";
+    }
+}
+
+// Load immediately + refresh every 60 seconds
+loadScores();
+setInterval(loadScores, 60000);
+</script>
+
+</body>
+</html>
