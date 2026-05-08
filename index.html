@@ -44,16 +44,20 @@
 <script>
 async function loadScores() {
     try {
-        const res = await fetch("https://site.api.espn.com/apis/v2/sports/baseball/mlb/scoreboard");
+        const res = await fetch("https://sports.core.api.espn.com/v2/sports/baseball/leagues/mlb/events");
         const data = await res.json();
-        const games = data.events;
 
         let html = "";
 
-        games.forEach(game => {
-            const c = game.competitions[0];
-            const home = c.competitors.find(t => t.homeAway === "home");
-            const away = c.competitors.find(t => t.homeAway === "away");
+        for (const eventUrl of data.items) {
+            const eventRes = await fetch(eventUrl.href);
+            const eventData = await eventRes.json();
+
+            const competition = eventData.competitions[0];
+            const competitors = competition.competitors;
+
+            const home = competitors.find(t => t.homeAway === "home");
+            const away = competitors.find(t => t.homeAway === "away");
 
             html += `
                 <div class="game">
@@ -61,10 +65,10 @@ async function loadScores() {
                         <span>${away.team.displayName}: <strong>${away.score || "-"}</strong></span>
                         <span>${home.team.displayName}: <strong>${home.score || "-"}</strong></span>
                     </div>
-                    <div class="status">${c.status.type.shortDetail}</div>
+                    <div class="status">${competition.status.type.shortDetail}</div>
                 </div>
             `;
-        });
+        }
 
         document.getElementById("scoreboard").innerHTML = html;
     } catch (e) {
@@ -72,10 +76,10 @@ async function loadScores() {
     }
 }
 
-// Load immediately + refresh every 60 seconds
 loadScores();
 setInterval(loadScores, 60000);
 </script>
+
 
 </body>
 </html>
